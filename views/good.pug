@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  .timeline
+    form#good-form(action='/good' method='post' enctype='multipart/form-data')
+      .input-group
+        label(for='good-name') product name
+        input#good-name(name='name' required autofocus)
+      .input-group
+        label(for='good-photo') Product photo
+
+        input#good-photo(type='file' name='img' required)
+      .input-group
+        label(for='good-photo') Auction time
+        input#good-end(type='number' name='end' required)
+      .input-group
+        label(for='good-price') Starting price
+        input#good-price(type='number' name='price' required)
+      button#join-btn.btn(type='submit') Product registration
