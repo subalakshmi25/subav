@@ -1,0 +1,69 @@
+extends layout
+
+block good
+  h2= good.name
+  div= 'registrant: ' + good.owner.nickname
+  div= 'amount: ' + good.price + 'won'
+  strong#time(data-start=good.createdAt data-end=good.end)
+  img#good-img(src='/img/' + good.img)
+
+block content
+  .timeline
+    #bid
+      for bid in auction
+        div
+          span= bid.user.nickname + 'dude: '
+          strong= bid.bid + 'Bid .'
+          if bid.msg
+            span= '(' + bid.msg + ')'
+    form#bid-form
+      input(type='number' name='bid' placeholder='Bid' required min=good.price)
+      input(type='msg' name='msg' placeholder='Message (optional)' maxlength='100')
+      button.btn(type='submit') bidding
+    if auctionError
+      .error-message= auctionError
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/event-source-polyfill/0.0.9/eventsource.min.js')
+  script(src='/socket.io/socket.io.js')
+  script.
+    document.querySelector('#bid-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var xhr = new XMLHttpRequest();
+      var errorMessage = document.querySelector('.error-message');
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          e.target.bid.value = '';
+          e.target.msg.value = '';
+          errorMessage.textContent = '';
+        } else {
+          console.error(xhr.responseText);
+          e.target.bid.value = '';
+          e.target.msg.value = '';
+          errorMessage.textContent = xhr.responseText
+        }
+      };
+      xhr.open('POST', '/good/#{good.id}/bid');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({
+        bid: e.target.bid.value,
+        msg: e.target.msg.value,
+      }));
+    });
+    var es = new EventSource("/sse");
+    var socket = io.connect('http://localhost:9090', {
+      path: '/socket.io'
+    });
+    socket.on('bid', function (data) {
+      var div = document.createElement('div');
+      var span = document.createElement('span');
+      span.textContent = data.nickname + ' dear: ';
+      var strong = document.createElement('strong');
+      strong.textContent = data.bid + 'Bid for KRW.';
+      div.appendChild(span);
+      div.appendChild(strong);
+      if (data.msg) {
+        span = document.createElement('span');
+        span.textContent = '(' + data.msg + ')';
+        div.appendChild(span);
+      }
+      document.querySelector('#bid').appendChild(div);
+    });
